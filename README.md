@@ -8,4 +8,4 @@ OK so for now, i'm compiling at command line with :
 
 gcc -shared -I/usr/include/python2.7/ -lpython2.7 -o pyuba.so pyuba.c
 
-Haven't run any tests yet, will tomorrow
+basic sanity tests up
