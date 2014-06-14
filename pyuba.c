@@ -20,6 +20,8 @@ pyuba_getitem(PyObject *self, PyObject *args)
   pyuba_str = (pyuba_struct *) structptr;
   return Py_BuildValue("i", pyuba_str->array[index]);
 }
+
+
 static PyObject *
 pyuba_remove(PyObject *self, PyObject *args)
 {
@@ -43,6 +45,26 @@ pyuba_insert(PyObject *self, PyObject *args)
 {
   int elem, index;
   unsigned long structptr;
+  pyuba_struct *pyuba_ptr;
+  if (PyArg_Parsetuple(args, "lii" , &structptr, &index, &elem) == 0){
+    return NULL;
+  }
+  pyuba_ptr = (pyuba_struct *) structptr;
+  if (index < pyuba_ptr->numitems) {
+    int *newarray = malloc(sizeof(int) * index);
+    (void) memcpy(newarray, pyuba_str->array, 
+          (sizeof(int) * pyuba_str->numitems));
+
+
+  }
+
+}
+
+static PyObject *
+pyuba_append(PyObject *self, PyObject *args)
+{
+  int elem, index;
+  unsigned long structptr;
   int *newarray;
   pyuba_struct *pyuba_str;
   if (PyArg_ParseTuple(args, "lii", &structptr, &index, &elem) == 0) {
@@ -52,20 +74,20 @@ pyuba_insert(PyObject *self, PyObject *args)
   if (++(pyuba_str->numitems) == pyuba_str->size){
     /* We need to double the array size before insertion */
     newarray = malloc(2 * sizeof(int) * (pyuba_str->numitems));
-    memcpy(newarray, pyuba_str->array, (pyuba_str->numitems * sizeof(int)));
+    (void) memcpy(newarray, pyuba_str->array, 
+                   (pyuba_str->numitems * sizeof(int)));
+    (void) free(pyuba_str->array);
     pyuba_str->array = newarray;
     pyuba_str->start = newarray;
     pyuba_str->end = newarray + pyuba_str->numitems;
     pyuba_str->size *= 2;
   } else {
-    int i;
-    int *start = pyuba_str->start;
-    for (i = (pyuba_str->numitems - 1); i > (index); i--){
-      pyuba_str->start[i + 1] = pyuba_str->start[i];
-    }
-    pyuba_str->start[index] = elem;
-    pyuba_str->end++;
+    pyuba_str->end++
   }
+
+  
+  pyuba_str->array[numitems - 1] = elem;
+
   return Py_None;
 }
 
@@ -83,7 +105,7 @@ new_pyuba_method(PyObject *self, PyObject *args)
   mystruct->size = 2 * size;
   mystruct->numitems = 0;
   mystruct->start = mystruct->array;
-  mystruct->end = mystruct->end;
+  mystruct->end = mystruct->start;
   
   return Py_BuildValue("l", (long) mystruct);
 }
