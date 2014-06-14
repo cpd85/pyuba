@@ -1,6 +1,8 @@
 #include <Python/Python.h>
 
-typedef struct {
+#define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
+
+ struct {
   int *array; /*For future circular buffer use*/
   int *start;
   int *end;
@@ -43,19 +45,30 @@ pyuba_remove(PyObject *self, PyObject *args)
 static PyObject *
 pyuba_insert(PyObject *self, PyObject *args)
 {
-  int elem, index;
+  int elem, index, i;
   unsigned long structptr;
   pyuba_struct *pyuba_ptr;
   if (PyArg_Parsetuple(args, "lii" , &structptr, &index, &elem) == 0){
     return NULL;
   }
   pyuba_ptr = (pyuba_struct *) structptr;
-  if (index < pyuba_ptr->numitems) {
-    int *newarray = malloc(sizeof(int) * index);
+  if (index <= pyuba_ptr->numitems && pyuba_ptr->numitems < pyuba_pyr->size) {
+    pyuba_ptr->numitems++;
+    for (i = pyuba_ptr->numitems - 1; i--; i > index){
+      pyuba_ptr->array[i] = pyuba_ptr->array[i-1];
+    }
+    pyuba_ptr->end++;
+    pyuba_ptr->array[index] = elem;
+  } else {
+    /* We need to extend !!! */
+    int *newarray = malloc(sizeof(int) * MAX(index, 2*pyuba_ptr->numitems));
     (void) memcpy(newarray, pyuba_str->array, 
-          (sizeof(int) * pyuba_str->numitems));
-
-
+          (sizeof(int) * (pyuba_str->numitems)));
+    (void) free(pyuba_ptr->array);
+    pyuba_ptr->array = newarray;
+    pyuba_ptr->start = newarray;
+    pyuba_ptr->size = MAX(index, 2*pyuba_ptr->numitems);
+    pyuba_ptr->numitems++;
   }
 
 }
