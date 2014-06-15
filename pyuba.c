@@ -2,7 +2,7 @@
 
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
- struct {
+typedef struct {
   int *array; /*For future circular buffer use*/
   int *start;
   int *end;
@@ -15,7 +15,7 @@ pyuba_getitem(PyObject *self, PyObject *args)
 {
   int index;
   unsigned long structptr;
-  pyuba_struct *pyuba_str;
+  pyuba_struct *pyuba_str = NULL;
   if (PyArg_ParseTuple(args, "li", &structptr, &index) == 0){
     return NULL;
   }
@@ -48,27 +48,30 @@ pyuba_insert(PyObject *self, PyObject *args)
   int elem, index, i;
   unsigned long structptr;
   pyuba_struct *pyuba_ptr;
-  if (PyArg_Parsetuple(args, "lii" , &structptr, &index, &elem) == 0){
+  if (PyArg_ParseTuple(args, "lii" , &structptr, &index, &elem) == 0){
     return NULL;
   }
   pyuba_ptr = (pyuba_struct *) structptr;
-  if (index <= pyuba_ptr->numitems && pyuba_ptr->numitems < pyuba_pyr->size) {
+  if (index <= pyuba_ptr->numitems && pyuba_ptr->numitems < pyuba_ptr->size) {
     pyuba_ptr->numitems++;
-    for (i = pyuba_ptr->numitems - 1; i--; i > index){
+    for (i = pyuba_ptr->numitems - 1; i > index; i--){
       pyuba_ptr->array[i] = pyuba_ptr->array[i-1];
     }
     pyuba_ptr->end++;
     pyuba_ptr->array[index] = elem;
+    return Py_None;
   } else {
     /* We need to extend !!! */
     int *newarray = malloc(sizeof(int) * MAX(index, 2*pyuba_ptr->numitems));
-    (void) memcpy(newarray, pyuba_str->array, 
-          (sizeof(int) * (pyuba_str->numitems)));
+    (void) memcpy(newarray, pyuba_ptr->array, 
+          (sizeof(int) * (pyuba_ptr->numitems)));
     (void) free(pyuba_ptr->array);
     pyuba_ptr->array = newarray;
     pyuba_ptr->start = newarray;
     pyuba_ptr->size = MAX(index, 2*pyuba_ptr->numitems);
     pyuba_ptr->numitems++;
+    pyuba_ptr->array[index] = elem;
+    return Py_None;
   }
 
 }
@@ -95,11 +98,11 @@ pyuba_append(PyObject *self, PyObject *args)
     pyuba_str->end = newarray + pyuba_str->numitems;
     pyuba_str->size *= 2;
   } else {
-    pyuba_str->end++
+    pyuba_str->end++;
   }
 
   
-  pyuba_str->array[numitems - 1] = elem;
+  pyuba_str->array[pyuba_str->numitems - 1] = elem;
 
   return Py_None;
 }
