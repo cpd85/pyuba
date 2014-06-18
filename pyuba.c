@@ -79,11 +79,11 @@ pyuba_insert(PyObject *self, PyObject *args)
 static PyObject *
 pyuba_append(PyObject *self, PyObject *args)
 {
-  int elem, index;
+  int elem;
   unsigned long structptr;
   int *newarray;
   pyuba_struct *pyuba_str;
-  if (PyArg_ParseTuple(args, "lii", &structptr, &index, &elem) == 0) {
+  if (PyArg_ParseTuple(args, "li", &structptr, &elem) == 0) {
     return NULL;
   }
   pyuba_str = (pyuba_struct *) structptr;
@@ -111,14 +111,18 @@ static PyObject *
 new_pyuba_method(PyObject *self, PyObject *args)
 {
   int size;
+  int i;
 
   if (PyArg_ParseTuple(args, "i", &size) == 0) {
     return NULL;
   }
   /* Prepare pyuba structure */
   pyuba_struct *mystruct = malloc(sizeof(pyuba_struct));
-  mystruct->array = malloc(sizeof(int) * 2 * size);
-  mystruct->size = 2 * size;
+  mystruct->array = malloc(sizeof(int) * size);
+  for (i = 0; i < size; i++){
+    mystruct->array[i] = 0;
+  }
+  mystruct->size = size;
   mystruct->numitems = 0;
   mystruct->start = mystruct->array;
   mystruct->end = mystruct->start;
@@ -129,6 +133,7 @@ new_pyuba_method(PyObject *self, PyObject *args)
 static PyMethodDef pyuba_methods[] = {
   {"insert", pyuba_insert, METH_VARARGS},
   {"remove", pyuba_remove, METH_VARARGS},
+  {"append", pyuba_append, METH_VARARGS},
   {"new_pyuba", new_pyuba_method, METH_VARARGS},
   {"getitem", pyuba_getitem, METH_VARARGS}, 
   {NULL, NULL}
