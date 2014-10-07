@@ -1,4 +1,4 @@
-#include <Python/Python.h>
+#include <Python.h>
 
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
