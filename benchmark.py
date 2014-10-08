@@ -4,7 +4,7 @@ import time
 #I'm guessing the reason pyuba is slow right now is because
 #the calls are wrapped in a class.
 
-mypyuba = pyuba.new_pyuba(8)
+mypyuba = pyuba.new_pyuba(500)
 mylist = [0] * 8
 
 regliststart = time.time()

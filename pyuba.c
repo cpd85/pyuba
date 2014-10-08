@@ -84,7 +84,7 @@ pyuba_append(PyObject *self, PyObject *args)
   PyObject *str_holder;
   int *newarray;
   pyuba_struct *pyuba_str;
-  if (PyArg_ParseTuple(args, "li", &str_holder, &elem) == 0) {
+  if (PyArg_ParseTuple(args, "Oi", &str_holder, &elem) == 0) {
     return NULL;
   }
   pyuba_str = PyCapsule_GetPointer(str_holder, "");
