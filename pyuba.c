@@ -1,5 +1,8 @@
 #include <Python.h>
 
+/*XXX: add a free function pl0x */
+
+/* this macro is safe right?~?!?~? pls don't use with an incrementer */
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
 typedef struct {
@@ -10,6 +13,7 @@ typedef struct {
   int size;
 } pyuba_struct;
 
+/* XXX: we need to check for index and boundary safety*/
 static PyObject *
 pyuba_getitem(PyObject *self, PyObject *args)
 {
@@ -23,16 +27,18 @@ pyuba_getitem(PyObject *self, PyObject *args)
   return Py_BuildValue("i", pyuba_str->array[index]);
 }
 
-
+/* XXX: check for ability to shrink buffer size */
 static PyObject *
 pyuba_remove(PyObject *self, PyObject *args)
 {
   int index, i;
   PyObject *str_holder;
   pyuba_struct *pyuba_str;
+
   if (PyArg_ParseTuple(args, "Oi", &str_holder, &index) == 0) {
     return NULL;
   }
+
   pyuba_str = PyCapsule_GetPointer(str_holder, "");
   for (i = index; i < (pyuba_str->numitems -1); i++){
     pyuba_str->array[i] = pyuba_str->array[i + 1];
@@ -42,6 +48,8 @@ pyuba_remove(PyObject *self, PyObject *args)
   return Py_None;
 }
 
+
+/*XXX: improve (aka implement lolz) circular buffering */
 static PyObject *
 pyuba_insert(PyObject *self, PyObject *args)
 {
@@ -52,7 +60,9 @@ pyuba_insert(PyObject *self, PyObject *args)
   if (PyArg_ParseTuple(args, "Oii" , &str_holder, &index, &elem) == 0){
     return NULL;
   }
-  pyuba_ptr = PyCapsule_GetPointer(str_holder, "");;
+
+  pyuba_ptr = PyCapsule_GetPointer(str_holder, "");
+
   if (index <= pyuba_ptr->numitems && pyuba_ptr->numitems < pyuba_ptr->size) {
     pyuba_ptr->numitems++;
     for (i = pyuba_ptr->numitems - 1; i > index; i--){
@@ -60,6 +70,7 @@ pyuba_insert(PyObject *self, PyObject *args)
     }
     pyuba_ptr->end++;
     pyuba_ptr->array[index] = elem;
+    Py_INCREF(Py_None);
     return Py_None;
   } else {
     /* We need to extend !!! */
@@ -72,11 +83,13 @@ pyuba_insert(PyObject *self, PyObject *args)
     pyuba_ptr->size = MAX(index, 2*pyuba_ptr->numitems);
     pyuba_ptr->numitems++;
     pyuba_ptr->array[index] = elem;
+    Py_INCREF(Py_None);
     return Py_None;
   }
 
 }
 
+/* can probably just map this to an insert at end of list... */
 static PyObject *
 pyuba_append(PyObject *self, PyObject *args)
 {
@@ -105,9 +118,11 @@ pyuba_append(PyObject *self, PyObject *args)
   
   pyuba_str->array[pyuba_str->numitems - 1] = elem;
 
+  Py_INCREF(Py_None);
   return Py_None;
 }
 
+/* this one might actually be ok~!!!~~ */
 static PyObject *
 new_pyuba_method(PyObject *self, PyObject *args)
 {
