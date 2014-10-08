@@ -14,12 +14,12 @@ static PyObject *
 pyuba_getitem(PyObject *self, PyObject *args)
 {
   int index;
-  unsigned long structptr;
   pyuba_struct *pyuba_str = NULL;
-  if (PyArg_ParseTuple(args, "li", &structptr, &index) == 0){
+  PyObject *str_holder;
+  if (PyArg_ParseTuple(args, "Oi", &str_holder, &index) == 0){
     return NULL;
   }
-  pyuba_str = (pyuba_struct *) structptr;
+  pyuba_str = PyCapsule_GetPointer(str_holder, "");
   return Py_BuildValue("i", pyuba_str->array[index]);
 }
 
@@ -28,12 +28,12 @@ static PyObject *
 pyuba_remove(PyObject *self, PyObject *args)
 {
   int index, i;
-  unsigned long structptr;
+  PyObject *str_holder;
   pyuba_struct *pyuba_str;
-  if (PyArg_ParseTuple(args, "li", &structptr, &index) == 0) {
+  if (PyArg_ParseTuple(args, "Oi", &str_holder, &index) == 0) {
     return NULL;
   }
-  pyuba_str = (pyuba_struct *) structptr;
+  pyuba_str = PyCapsule_GetPointer(str_holder, "");
   for (i = index; i < (pyuba_str->numitems -1); i++){
     pyuba_str->array[i] = pyuba_str->array[i + 1];
   }
@@ -46,12 +46,13 @@ static PyObject *
 pyuba_insert(PyObject *self, PyObject *args)
 {
   int elem, index, i;
-  unsigned long structptr;
   pyuba_struct *pyuba_ptr;
-  if (PyArg_ParseTuple(args, "lii" , &structptr, &index, &elem) == 0){
+  PyObject *str_holder;
+  
+  if (PyArg_ParseTuple(args, "Oii" , &str_holder, &index, &elem) == 0){
     return NULL;
   }
-  pyuba_ptr = (pyuba_struct *) structptr;
+  pyuba_ptr = PyCapsule_GetPointer(str_holder, "");;
   if (index <= pyuba_ptr->numitems && pyuba_ptr->numitems < pyuba_ptr->size) {
     pyuba_ptr->numitems++;
     for (i = pyuba_ptr->numitems - 1; i > index; i--){
@@ -80,13 +81,13 @@ static PyObject *
 pyuba_append(PyObject *self, PyObject *args)
 {
   int elem;
-  unsigned long structptr;
+  PyObject *str_holder;
   int *newarray;
   pyuba_struct *pyuba_str;
-  if (PyArg_ParseTuple(args, "li", &structptr, &elem) == 0) {
+  if (PyArg_ParseTuple(args, "li", &str_holder, &elem) == 0) {
     return NULL;
   }
-  pyuba_str = (pyuba_struct *) structptr;
+  pyuba_str = PyCapsule_GetPointer(str_holder, "");
   if (++(pyuba_str->numitems) == pyuba_str->size){
     /* We need to double the array size before insertion */
     newarray = malloc(2 * sizeof(int) * (pyuba_str->numitems));
@@ -112,7 +113,7 @@ new_pyuba_method(PyObject *self, PyObject *args)
 {
   int size;
   int i;
-
+  PyObject *retcapsule;
   if (PyArg_ParseTuple(args, "i", &size) == 0) {
     return NULL;
   }
@@ -126,8 +127,8 @@ new_pyuba_method(PyObject *self, PyObject *args)
   mystruct->numitems = 0;
   mystruct->start = mystruct->array;
   mystruct->end = mystruct->start;
-  
-  return Py_BuildValue("l", (long) mystruct);
+  retcapsule = PyCapsule_New(mystruct, "", NULL); 
+  return retcapsule;
 }
 
 static PyMethodDef pyuba_methods[] = {
